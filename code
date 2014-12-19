@@ -1,0 +1,199 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+
+struct wood{
+   char name[10];
+   char type;
+   unsigned int number;
+   char type2[10];
+   unsigned int profit;
+};
+
+void add(char name[]);
+void del(char name[],unsigned int n);
+void modify(char name[],unsigned int n);
+void disp(char name[], unsigned int n);
+void dispall(char name[]);
+int length(char name[]);
+unsigned int getuint(char *message);
+
+int main(int argc, char *argv[]){
+   if(argc < 2)
+       printf("\nFormat:\tlab8 [FILE_NAME]");
+   else{
+       FILE *fp;
+       fp = fopen(argv[1],"r");
+       if(fp){
+           printf("\nFile found. Press any key to continue");
+           fclose(fp);
+           char c;
+           unsigned int n;
+           while((c = getch())!= 27){
+               switch(c){
+                   case '1':
+                       add(argv[1]);
+                       break;
+                   case '2':
+                       n = getuint("\nNumber to display: ");
+                       disp(argv[1],n);
+                       break;
+                   case '3':
+                       dispall(argv[1]);
+                       break;
+                   case '4':
+                       n = getuint("\nNumber to modify: ");
+                       modify(argv[1],n);
+                       break;
+                   case '5':
+                       n = getuint("\nNumber to delete: ");
+                       del(argv[1],n);
+                       break;
+               }
+               printf("\n\n1.Add     2.Print element     3.Print all     4.Modify     5.Delete     ESC-Exit");
+           }
+       }
+       else
+           printf("\nFile not found");
+   }
+   return 0;
+}
+
+void add(char name[]){
+   FILE *fp;
+   struct wood data;
+   fp = fopen(name,"a");
+   fseek(fp, 0L, SEEK_END);
+   printf("Name: ");
+   scanf("%s",data.name);
+   fflush(stdin);
+   printf("type: ");
+   scanf("%c",&data.type);
+   fflush(stdin);
+   data.number = getuint("number: ");
+   fflush(stdin);
+
+   printf("type2: ");
+   scanf("%s",data.type2);
+   fflush(stdin);
+   data.profit = getuint("profit: ");
+   fprintf(fp,"\n%10s %c %u %10s %u", data.name, data.type, data.number, data.type2, data.profit);
+   fclose(fp);
+}
+
+void disp(char name[], unsigned int n){
+   FILE *fp;
+   struct wood data;
+   int l = length(name);
+   if(n<=l){
+       fp = fopen(name,"r");
+       fseek(fp, (n - 1)*sizeof(struct wood), SEEK_SET);
+       fscanf(fp,"%10s %c %u %10s %u\n", data.name, &data.type, &data.number, data.type2, &data.profit);
+       printf("\n| %-10.10s | %-10c | %-10u | %-10.10s | %-10u |", data.name, data.type, data.number, data.type2, data.profit);
+   }
+   else
+       printf("\nWrong number");
+}
+
+int length(char name[]){
+   FILE *fp;
+   fp = fopen(name,"r");
+   int i = 0;
+   struct wood data;
+   while(!feof(fp)){
+       fscanf(fp,"%10s %c %u %10s %u\n", data.name, &data.type, &data.number, data.type2, &data.profit);
+       ++i;
+   }
+   fclose(fp);
+   return i;
+}
+
+void dispall(char name[]){
+   FILE *fp;
+   int i;
+   int l = length(name);
+
+   fp = fopen(name,"r");
+   printf("\n|================================================================|");
+   printf("\n|            |            |            |            |            |");
+   printf("\n|    Name    |     type   |  number    |   type2    |   profit   |");
+   printf("\n|            |            |            |            |            |");
+   printf("\n|================================================================|");
+   for(i = 1; i <= l; i++)
+       disp(name,i);
+   printf("\n|================================================================|");
+   fclose(fp);
+}
+
+void del(char name[],unsigned int n){
+   FILE *fp,*fpc;
+   struct wood data;
+   int i;
+   int l = length(name);
+   fp = fopen(name,"r");
+   fpc = fopen("temp","w");
+   if(n<=l){
+       for(i = 1; i < n; i++){
+           fscanf(fp,"%10s %c %u %10s %u\n", data.name, &data.type, &data.number, data.type2, &data.profit);
+           fprintf(fpc,"%10s %c %u %10s %u\n", data.name, data.type, data.number, data.type2, data.profit);
+       }
+       fseek(fp,sizeof(struct wood), SEEK_CUR);
+       for(i = n + 1; i < l; i++){
+           fscanf(fp,"%10s %c %u %10s %u\n", data.name, &data.type, &data.number, data.type2, &data.profit);
+           fprintf(fpc,"%10s %c %u %10s %u\n", data.name, data.type, data.number, data.type2, data.profit);
+       }
+
+       fclose(fp);
+       fclose(fpc);
+        remove(name);
+       printf("%d",rename("temp",name));
+
+   }
+   else{
+       printf("\nWrong number");
+       fclose(fp);
+       fclose(fpc);
+   }
+}
+
+void modify(char name[],unsigned int n){
+   FILE *fp;
+   struct wood data;
+   int l = length(name);
+   fp = fopen(name,"r+");
+   if(n<=l){
+       fseek(fp, (n - 1)*sizeof(struct wood), SEEK_SET);
+       printf("Name: ");
+       scanf("%s",data.name);
+       fflush(stdin);
+       printf("type: ");
+       scanf("%c",&data.type);
+        fflush(stdin);
+       printf("type2: ");
+       scanf("%s",data.type2);
+
+       fflush(stdin);
+       data.number = getuint("number: ");
+
+       data.profit = getuint("profit: ");
+       fprintf(fp,"%10s %c %u %10s %u\n", data.name, data.type, data.number, data.type2, data.profit);
+   }
+   else
+       printf("\nWrong number");
+   fclose(fp);
+}
+
+unsigned int getuint(char *message){
+char s[7];
+int num;
+do{
+printf("%s",message);
+scanf("%s",s);
+rewind(stdin);
+if((num = atoi(s)) <= 0){
+printf("Error: wrong input\n");
+continue;
+}
+} while(!num);
+return num;
+}
